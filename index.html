@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cats facts</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <header class="header">
+        <nav>
+            <img class="logo" src="images/cat_white.png">
+            <div class="title">Facts about cats</div>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="search-form">
+            <input type="text" class="search-field">
+            <div class="list-auto-completion hidden" id="list">
+
+            </div>
+            <button class="search-btn">Найти</button>
+        </div>
+        <div class="pagination-info">
+            <div class="with-selector">
+                Показывать по
+                <select class="per-page" name="per-page" id="count-page">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+
+                </select>
+                записей на странице.
+            </div>
+            <div class="info-about-all-pages">
+                Показаны записи с <span class="from-page"></span> по <span class="to-page"></span>
+                из <span class="all-page"></span>.
+            </div>
+        </div>
+        <div class="records-list"></div>
+        <div class="pagination"></div>
+        <script src="js/main.js"></script>
+</body>
+
+</html>
