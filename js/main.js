@@ -1,23 +1,8 @@
 var field = document.querySelector(".search-field");
-var ul = document.getElementById("list");
+let searchButton = document.querySelector(".search-btn");
 let autoCompleteList = document.querySelector(".list-auto-completion");
+var ul = document.getElementById("list");
 let factsList = document.querySelector(".facts-list");
-
-function downloadData(page = 1) {
-  let url = new URL(factsList.dataset.url);
-  let perPage = document.querySelector(".per-page-btn").value;
-  url.searchParams.append("page", page);
-  url.searchParams.append("per-page", perPage);
-  let xhr = new XMLHttpRequest();
-  xhr.open("GET", url);
-  xhr.responseType = "json";
-  xhr.onload = function () {
-    renderRecords(this.response.records);
-    setPaginationInfo(this.response["_pagination"]);
-    renderPaginationElement(this.response["_pagination"]);
-  };
-  xhr.send();
-}
 
 function createAuthorElement(record) {
   let user = record.user || { name: { first: "", last: "" } };
@@ -27,10 +12,18 @@ function createAuthorElement(record) {
   return authorElement;
 }
 
+function createUpvotesElement(record) {
+  let upvotesElement = document.createElement("div");
+  upvotesElement.classList.add("upvotes");
+  upvotesElement.innerHTML = record.upvotes;
+  return upvotesElement;
+}
+
 function createFooterElement(record) {
   let footerElement = document.createElement("div");
   footerElement.classList.add("item-footer");
   footerElement.append(createAuthorElement(record));
+  footerElement.append(createUpvotesElement(record));
   return footerElement;
 }
 
@@ -57,13 +50,11 @@ function renderRecords(records) {
   }
 }
 
-function setPaginationInfo(pagination) {
-  document.querySelector(".total-count").innerHTML = pagination.total_count;
-  let start =
-    pagination.total_count &&
-    (pagination.current_page - 1) * pagination.per_page + 1;
+function setPaginationInfo(info) {
+  document.querySelector(".total-count").innerHTML = info.total_count;
+  let start = info.total_count && (info.current_page - 1) * info.per_page + 1;
   document.querySelector(".current-interval-start").innerHTML = start;
-  let end = Math.min(pagination.total_count, start + pagination.per_page - 1);
+  let end = Math.min(info.total_count, start + info.per_page - 1);
   document.querySelector(".current-interval-end").innerHTML = end;
 }
 
@@ -78,14 +69,14 @@ function createPageBtn(page, classes = []) {
   return btn;
 }
 
-function renderPaginationElement(pagination) {
+function renderPaginationElement(info) {
   let btn;
   let paginationContainer = document.querySelector(".pagination");
   paginationContainer.innerHTML = "";
 
   btn = createPageBtn(1, ["first-page-btn"]);
   btn.innerHTML = "Первая страница";
-  if (pagination.current_page == 1) {
+  if (info.current_page == 1) {
     btn.style.visibility = "hidden";
   }
   paginationContainer.append(btn);
@@ -94,22 +85,39 @@ function renderPaginationElement(pagination) {
   buttonsContainer.classList.add("pages-btns");
   paginationContainer.append(buttonsContainer);
 
-  let start = Math.max(pagination.current_page - 2, 1);
-  let end = Math.min(pagination.current_page + 2, pagination.total_pages);
+  let start = Math.max(info.current_page - 2, 1);
+  let end = Math.min(info.current_page + 2, info.total_pages);
   for (let i = start; i <= end; i++) {
-    btn = createPageBtn(i, i == pagination.current_page ? ["active"] : []);
+    btn = createPageBtn(i, i == info.current_page ? ["active"] : []);
     buttonsContainer.append(btn);
   }
 
-  btn = createPageBtn(pagination.total_pages, ["last-page-btn"]);
+  btn = createPageBtn(info.total_pages, ["last-page-btn"]);
   btn.innerHTML = "Последняя страница";
-  if (pagination.current_page == pagination.total_pages) {
+  if (info.current_page == info.total_pages) {
     btn.style.visibility = "hidden";
   }
-  if (pagination.total_count == 0) {
+  if (info.total_count == 0) {
     btn.style.visibility = "hidden";
   }
   paginationContainer.append(btn);
+}
+
+function downloadData(page = 1, param) {
+  let url = new URL(factsList.dataset.url);
+  let perPage = document.querySelector(".per-page-btn").value;
+  if (param) url.searchParams.append("q", param);
+  url.searchParams.append("page", page);
+  url.searchParams.append("per-page", perPage);
+  let xhr = new XMLHttpRequest();
+  xhr.open("GET", url);
+  xhr.responseType = "json";
+  xhr.onload = function () {
+    renderRecords(this.response.records);
+    setPaginationInfo(this.response["_pagination"]);
+    renderPaginationElement(this.response["_pagination"]);
+  };
+  xhr.send();
 }
 
 function perPageBtnHandler(event) {
@@ -158,8 +166,10 @@ function renderAutocompleat(list) {
 
 function autocompleteHandler() {
   deleteArray();
+
   let url = new URL(autoCompleteList.dataset.url);
   url.searchParams.append("q", field.value);
+
   let xhr = new XMLHttpRequest();
   xhr.open("GET", url);
   xhr.responseType = "json";
